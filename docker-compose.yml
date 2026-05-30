@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mcm} -d ${POSTGRES_DB:-cloud_messaging}"]
       interval: 10s
@@ -23,12 +23,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8090:8080"
+      - "${PORT:-8080}:8080"
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-mcm}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cloud_messaging}
+      DATABASE_URL: postgres://${POSTGRES_USER:-mcm}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-cloud_messaging}
       API_KEY: ${API_KEY:?API_KEY is required}
-      HOST: "0.0.0.0"
-      PORT: "8080"
+      HOST: "${HOST:-0.0.0.0}"
+      PORT: "${PORT:-8080}"
       VAPID_CONTACT: ${VAPID_CONTACT:-mailto:admin@example.com}
       RUST_LOG: ${RUST_LOG:-info,sqlx=warn}
       CLEANUP_INTERVAL_HOURS: ${CLEANUP_INTERVAL_HOURS:-6}
@@ -37,7 +37,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://${HOST:-0.0.0.0}:${PORT:-8080}/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
